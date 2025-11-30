@@ -24,7 +24,7 @@ function normalizeValue(value) {
 }
 
 class Headers {
-    map = new Map();
+    #map = new Map();
 
     constructor(init = {}) {
         if (init instanceof Headers) {
@@ -43,57 +43,65 @@ class Headers {
             return this;
         }
 
-        Object.getOwnPropertyNames(init).forEach((name) =>
-            this.append(name, init[name])
-        );
+        if (init && typeof init === "object") {
+            Object.getOwnPropertyNames(init).forEach((name) =>
+                this.append(name, init[name])
+            );
+        }
     }
 
     append(name, value) {
         name = normalizeName(name);
         value = normalizeValue(value);
         const oldValue = this.get(name);
-        // From MDN: If the specified header already exists and accepts multiple values, append() will append the new value to the end of the value set.
-        // However, we're a missing a check on whether the header does indeed accept multiple values
-        this.map.set(name, oldValue ? oldValue + ", " + value : value);
+        this.#map.set(name, oldValue ? oldValue + ", " + value : value);
     }
 
     delete(name) {
-        this.map.delete(normalizeName(name));
+        this.#map.delete(normalizeName(name));
     }
 
     get(name) {
         name = normalizeName(name);
-        return this.has(name) ? this.map.get(name) : null;
+        return this.has(name) ? this.#map.get(name) : null;
     }
 
     has(name) {
-        return this.map.has(normalizeName(name));
+        return this.#map.has(normalizeName(name));
     }
 
     set(name, value) {
-        this.map.set(normalizeName(name), normalizeValue(value));
+        this.#map.set(normalizeName(name), normalizeValue(value));
     }
 
     forEach(callback, thisArg) {
-        this.map.forEach(function (value, name) {
+        this.#map.forEach(function (value, name) {
             callback.call(thisArg, value, name, this);
         }, this);
     }
 
     keys() {
-        return this.map.keys();
+        return this.#map.keys();
     }
 
     values() {
-        return this.map.values();
+        return this.#map.values();
     }
 
     entries() {
-        return this.map.entries();
+        return this.#map.entries();
     }
 
     [Symbol.iterator]() {
         return this.entries();
+    }
+
+    toObject() {
+        const obj = {};
+        this.#map.forEach((value, name) => {
+            obj[name] = value;
+        });
+        return obj;
     }
 }
 

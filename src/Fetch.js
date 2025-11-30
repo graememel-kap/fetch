@@ -209,7 +209,8 @@ class Fetch {
         this._request.signal?.removeEventListener("abort", this._abortFn);
 
         if (didTimeOut) {
-            this.__closeStream();
+            // Fix #27: Use error() instead of close() for error states
+            this.__errorStream(new TypeError("Network request timed out"));
 
             return this._deferredPromise.reject(
                 new TypeError("Network request timed out")
@@ -217,7 +218,8 @@ class Fetch {
         }
 
         if (errorMessage) {
-            this.__closeStream();
+            // Fix #27: Use error() instead of close() for error states
+            this.__errorStream(new TypeError(`Network request failed: ${errorMessage}`));
 
             return this._deferredPromise.reject(
                 new TypeError(`Network request failed: ${errorMessage}`)
@@ -240,11 +242,21 @@ class Fetch {
         }
 
         try {
-            this._response = new ResponseClass(this._nativeResponse, {
-                status: this._responseStatus,
-                url: this._responseUrl,
-                headers: this._nativeResponseHeaders,
-            });
+            // Fix #15: Handle 204 No Content responses where _nativeResponse is undefined
+            if (this._nativeResponse === undefined || this._nativeResponse === null) {
+                // For empty responses (like 204 No Content), create an empty Response
+                this._response = new Response(null, {
+                    status: this._responseStatus,
+                    url: this._responseUrl,
+                    headers: this._nativeResponseHeaders,
+                });
+            } else {
+                this._response = new ResponseClass(this._nativeResponse, {
+                    status: this._responseStatus,
+                    url: this._responseUrl,
+                    headers: this._nativeResponseHeaders,
+                });
+            }
             this._deferredPromise.resolve(this._response);
         } catch (error) {
             this._deferredPromise.reject(error);
@@ -255,6 +267,15 @@ class Fetch {
 
     __closeStream() {
         this._streamController?.close();
+    }
+
+    // Fix #27: Add error method for proper stream error handling
+    __errorStream(error) {
+        try {
+            this._streamController?.error(error);
+        } catch (e) {
+            // Stream may already be closed, ignore
+        }
     }
 }
 

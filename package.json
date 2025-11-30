@@ -1,19 +1,24 @@
 {
-  "name": "react-native-fetch-api",
-  "description": "A fetch API polyfill for React Native with text streaming support.",
-  "version": "3.0.0",
+  "name": "@graememel-kap/react-native-fetch-api",
+  "description": "A fetch API polyfill for React Native with text streaming support. Fork with fixes for headers serialization, 204 responses, and stream error handling.",
+  "version": "3.1.0",
   "main": "fetch.js",
   "author": {
     "name": "André Costa Lima",
     "email": "andreclima.pt@gmail.com",
     "url": "https://github.com/acostalima/"
   },
-  "repository": "react-native-community/fetch",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/graememel-kap/fetch.git"
+  },
   "license": "MIT",
   "keywords": [
     "react-native",
     "fetch",
-    "stream"
+    "stream",
+    "sse",
+    "server-sent-events"
   ],
   "devDependencies": {
     "@babel/core": "^7.12.3",
